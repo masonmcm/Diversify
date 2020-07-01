@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masonmcm/Diversify.git"
+  },
   "author": "Mason Mathew",
   "license": "ISC",
   "dependencies": {

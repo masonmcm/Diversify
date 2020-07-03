@@ -1,15 +1,4 @@
-  // /* Load the HTTP library */
-  // var http = require("http");
-
-  // /* Create an HTTP server to handle responses */
-
-  // http.createServer(function(request, response) {
-  //   response.writeHead(200, {"Content-Type": "text/plain"});
-  //   response.write("Hello World");
-  //   response.end();
-  // }).listen(8888);
-
-  /**
+/**
  * This is an example of a basic node.js script that performs
  * the Authorization Code oAuth2 flow to authenticate against
  * the Spotify Accounts.
@@ -52,7 +41,6 @@ app.use(express.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
 
-
 // Generates a call to the /authorize endpoint, passing along a
 // list of the scopes for which access permission is sought. 
 app.get('/login', function(req, res) {
@@ -61,7 +49,8 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  var scope = 'user-read-private user-read-email user-read-playback-state';
+  console.log("Request: " +  req)
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -72,6 +61,7 @@ app.get('/login', function(req, res) {
     }));
 });
 
+
 app.get('/callback', function(req, res) {
 
   // your application requests refresh and access tokens
@@ -80,10 +70,7 @@ app.get('/callback', function(req, res) {
   var code = req.query.code || null;
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
- 
-  console.log("Request: " +  req)
-  console.log("Cookies: " + req.cookies);
-  console.log("Stored state: " + storedState);
+
 
   if (state === null || state !== storedState) {
     res.redirect('/#' +
@@ -91,6 +78,8 @@ app.get('/callback', function(req, res) {
         error: 'state_mismatch'
       }));
   } else {
+
+    // Response goes to browser
     res.clearCookie(stateKey);
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
@@ -105,9 +94,12 @@ app.get('/callback', function(req, res) {
       json: true
     };
 
+    // Submit data to the browser using access token and refresh token
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
+        // Pulls from handlebars in code body 
+        
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
 
@@ -123,7 +115,7 @@ app.get('/callback', function(req, res) {
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
+        res.redirect('http://localhost:3000/#' +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token
@@ -139,10 +131,6 @@ app.get('/callback', function(req, res) {
 });
 
 app.get('/refresh_token', function(req, res) {
-
-  console.log("Request: " +  req)
-  console.log("Cookies: " + req.cookies);
-  console.log("Stored state: " + storedState);
 
   // requesting access token from refresh token
   var refresh_token = req.query.refresh_token;

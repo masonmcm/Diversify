@@ -51,6 +51,7 @@ class App extends Component {
             uri: response.item.uri
           }
         })
+        console.log(response.item);
       }))
   }
 
@@ -59,9 +60,6 @@ class App extends Component {
     const userId = await this.establishUser();
     spotifywebApi.createPlaylist(userId, playlistInfo)
       .then((response => {
-        console.log(response);
-        console.log(response.id);
-        console.log(this.state.nowPlaying.uri);
         spotifywebApi.addTracksToPlaylist(response.id, [this.state.nowPlaying.uri]);
       }));
   }

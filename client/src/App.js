@@ -10,15 +10,22 @@ class App extends Component {
     const params = this.getHashParams();
     this.state={
       loggedIn: params.access_token ? true : false,
+      id: '',
       nowPlaying: {
         name: 'Not Checked',
-        image: ''
+        image: '',
+        uri: ''
       }
     }
 
     if(params.access_token) {
       spotifywebApi.setAccessToken(params.access_token);
     }
+  }
+  
+   establishUser() {
+    const userId = spotifywebApi.getMe().then((response) => {return response.id});
+    return userId;
   }
 
   getHashParams() {
@@ -40,18 +47,23 @@ class App extends Component {
         this.setState({
           nowPlaying: {
             name: response.item.name,
-            image: response.item.album.images[0].url
+            image: response.item.album.images[0].url,
+            uri: response.item.uri
           }
         })
       }))
-    // spotifywebApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE').then(
-    //   function (data) {
-    //     console.log('Artist albums', data);
-    //   },
-    //   function (err) {
-    //     console.error(err);
-    //   }
-    // );
+  }
+
+  async addToNewPlaylist() {
+    var playlistInfo = {"name":this.state.nowPlaying.name,"description":"Generating a playlist on Spotify using the Diversify App","public":true};
+    const userId = await this.establishUser();
+    spotifywebApi.createPlaylist(userId, playlistInfo)
+      .then((response => {
+        console.log(response);
+        console.log(response.id);
+        console.log(this.state.nowPlaying.uri);
+        spotifywebApi.addTracksToPlaylist(response.id, [this.state.nowPlaying.uri]);
+      }));
   }
 
 
@@ -66,7 +78,10 @@ class App extends Component {
       <button onClick={() => this.getNowPlaying()}>
         Check Now Playing
       </button>
-    </div>
+      <button onClick={() => this.addToNewPlaylist()}>
+        Create New Playlist with Now Playing
+      </button>
+      </div>
     );
   }
 }

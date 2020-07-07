@@ -14,6 +14,8 @@ class App extends Component {
       nowPlaying: {
         name: 'Not Checked',
         image: '',
+        artistId: '',
+        artistName: '',
         uri: ''
       }
     }
@@ -21,11 +23,6 @@ class App extends Component {
     if(params.access_token) {
       spotifywebApi.setAccessToken(params.access_token);
     }
-  }
-  
-   establishUser() {
-    const userId = spotifywebApi.getMe().then((response) => {return response.id});
-    return userId;
   }
 
   getHashParams() {
@@ -48,20 +45,20 @@ class App extends Component {
           nowPlaying: {
             name: response.item.name,
             image: response.item.album.images[0].url,
+            artistId: response.item.artists[0].id,
+            artistName: response.item.artists[0].name,
             uri: response.item.uri
           }
         })
-        console.log(response.item);
       }))
   }
 
   async addToNewPlaylist() {
-    var playlistInfo = {"name":this.state.nowPlaying.name,"description":"Generating a playlist on Spotify using the Diversify App","public":true};
-    const userId = await this.establishUser();
-    spotifywebApi.createPlaylist(userId, playlistInfo)
-      .then((response => {
-        spotifywebApi.addTracksToPlaylist(response.id, [this.state.nowPlaying.uri]);
-      }));
+    var playlistInfo = {"name":"Best of " + this.state.nowPlaying.artistName,"description":"Generating a playlist on Spotify using the Diversify App","public":true};
+    var userId = await spotifywebApi.getMe().then((response) => {return response.id});
+    var playlist = await spotifywebApi.createPlaylist(userId, playlistInfo);
+    var topTracks = await spotifywebApi.getArtistTopTracks(this.state.nowPlaying.artistId, "US");
+    spotifywebApi.addTracksToPlaylist(playlist.id, topTracks.tracks.map((track) => {return track.uri;}));
   }
 
 
